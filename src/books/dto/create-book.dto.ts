@@ -1,4 +1,5 @@
-import { IsNotEmpty, IsNumber, IsString, Min } from "class-validator";
+import { IsEnum, IsNotEmpty, IsNumber, IsString, Min } from "class-validator";
+import { BookCategory } from "../entities/book.entity";
 
 export class CreateBookDto {
     @IsNotEmpty()
@@ -10,12 +11,12 @@ export class CreateBookDto {
     author: string;
 
     @IsNotEmpty()
-    @IsString()
-    category: string;
+    @IsEnum(BookCategory)
+    category: BookCategory;
 
     @IsNotEmpty()
     @IsString()
-    cover: string; // The cover will be a URL, stored in S3
+    cover: string; 
 
     @IsNotEmpty()
     @IsString()
