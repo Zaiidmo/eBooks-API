@@ -8,8 +8,8 @@ export class Book {
     description: string;
     price: number;
     borrowedBy?: BorrowInfo[];
-    createdAu: string;
-    updatedAu: string;
+    createdAt: string;
+    updatedAt: string;
 }
 
 export class BorrowInfo {
