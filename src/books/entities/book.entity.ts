@@ -4,16 +4,17 @@ export class Book {
     author: string;
     category: string;
     quantity: number;
-    cover: string;
+    cover: string; 
     description: string;
     price: number;
     borrowedBy?: BorrowInfo[];
     createdAt: string;
     updatedAt: string;
-}
-
-export class BorrowInfo {
+  }
+  
+  export class BorrowInfo {
     user_id: string;
     borrow_date: string;
     dueDate: string;
-}
+  }
+  

@@ -2,19 +2,18 @@ import { Injectable } from '@nestjs/common';
 import { DynamoDBConfigService } from 'src/config/dynamodb.config';
 import { Book, BorrowInfo } from './entities/book.entity';
 import { GetItemCommand, PutItemCommand } from '@aws-sdk/client-dynamodb';
-import { S3Service } from 'src/services/s3.service';
+import { S3ConfigService } from 'src/services/s3.service';
+import { v4 as uuidv4 } from 'uuid';
+import { DynamoDBDocumentClient, PutCommand } from '@aws-sdk/lib-dynamodb';
 
 @Injectable()
 export class BooksRepository {
-  private readonly tableName = process.env.DYNAMODB_TABLE_NAME || 'books';
+  private readonly dynamoDBDocumentClient: DynamoDBDocumentClient;
 
-  constructor(
-    private readonly dynamoDBConfigService: DynamoDBConfigService,
-    private readonly s3Service: S3Service,
-  ) {}
-
-  private getClient() {
-    return this.dynamoDBConfigService.getClient();
+  constructor(private readonly dynamoDBConfigService: DynamoDBConfigService) {
+    this.dynamoDBDocumentClient = DynamoDBDocumentClient.from(
+      this.dynamoDBConfigService.getClient(),
+    );
   }
 
   //Helper function to map DynamoDB response to Book entity
@@ -77,37 +76,18 @@ export class BooksRepository {
     };
   }
 
-  // Find a single book by its ID
-  async function(book_id: string): Promise<Book> {
-    const client = this.getClient();
+  //Create a new Book
+  async create(book: Book): Promise<void> {
     const params = {
-      TableName: this.tableName,
-      Key: {
-        book_id: { S: book_id },
-      },
+      TableName: process.env.DYNAMODB_TABLE_NAME,
+      Item: book,
     };
 
-    const { Item } = await client.send(new GetItemCommand(params));
-    return Item ? this.mapToBook(Item) : null;
-  }
-
-  //Create a new Book
-  async create(book: Book, coverFilePath: string): Promise<Book> {
-    const client = this.getClient();
-
-    //Upload  the cover image to S3 and get the URL
-    const coverUrl = await this.s3Service.uploadCover(coverFilePath, process.env.S3_BUCKET_NAME);
-
-    //Set the URL in the book object 
-    book.cover = coverUrl;
-
-    //Prepare DynamoDB parameters for book creation 
-    const params = {
-        TableName: this.tableName,
-        Item: this.mapBookToDynamoDBItem(book),
+    try {
+      await this.dynamoDBDocumentClient.send(new PutCommand(params));
+    } catch (error) {
+      console.error('Error creating book in DynamoDB:', error);
+      throw new Error('Failed to create book in database.');
     }
-
-    await client.send(new PutItemCommand(params));
-    return book;
   }
 }

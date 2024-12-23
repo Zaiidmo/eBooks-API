@@ -3,30 +3,33 @@ import { IsNotEmpty, IsNumber, IsString, Min } from "class-validator";
 export class CreateBookDto {
     @IsNotEmpty()
     @IsString()
-    title: String;
+    title: string;
 
     @IsNotEmpty()
     @IsString()
-    author: String;
+    author: string;
 
     @IsNotEmpty()
     @IsString()
-    category: String;
+    category: string;
 
     @IsNotEmpty()
     @IsString()
-    cover: String;
+    cover: string; // The cover will be a URL, stored in S3
 
     @IsNotEmpty()
     @IsString()
-    description: String;
+    description: string;
 
     @IsNotEmpty()
-    @IsString()
-    price: String;
+    @IsNumber()
+    @Min(0)
+    price: number;
 
     @IsNotEmpty()
     @IsNumber()
     @Min(1)
     quantity: number;
+
+
 }
