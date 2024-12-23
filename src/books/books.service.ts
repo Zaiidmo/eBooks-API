@@ -5,6 +5,7 @@ import { BooksRepository } from './books.repository';
 import { Book } from './entities/book.entity';
 import { S3ConfigService } from 'src/services/s3.service';
 import { v4 as uuidv4 } from 'uuid';
+import { DeleteBookDto } from './dto/delete-book.dto';
 
 @Injectable()
 export class BooksService {
@@ -81,5 +82,14 @@ export class BooksService {
     };
 
     await this.booksRepository.update(bookId, updatedBook);
+  }
+
+  //Delete a book by its ID 
+  async deleteBook(bookId: string): Promise<void> {
+    const book = await this.booksRepository.findById(bookId);
+    if (!book) {
+      throw new BadRequestException('Book not found');
+    }
+    await this.booksRepository.delete(bookId);
   }
 }

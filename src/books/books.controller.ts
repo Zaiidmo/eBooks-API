@@ -1,8 +1,9 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UploadedFile, UseInterceptors, Put } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UploadedFile, UseInterceptors, Put, NotFoundException } from '@nestjs/common';
 import { BooksService } from './books.service';
 import { CreateBookDto } from './dto/create-book.dto';
 import { UpdateBookDto } from './dto/update-book.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { DeleteBookDto } from './dto/delete-book.dto';
 
 @Controller('books')
 export class BooksController {
@@ -34,6 +35,20 @@ export class BooksController {
       return { message: 'Book updated successfully' };
     } catch (error) {
       return { error: error.message };
+    }
+  }
+
+  //Delete a book by its ID
+  @Delete(':id')
+  async deleteBook(@Param('id') bookId: string): Promise<any> {
+    try {
+      await this.booksService.deleteBook(bookId);
+      return { message: 'Book deleted successfully' };
+    } catch (error) {
+      if (error.message === 'Book not found.') {
+        throw new NotFoundException(error.message);
+      }
+      throw error;
     }
   }
 }

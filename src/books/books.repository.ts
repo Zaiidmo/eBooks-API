@@ -2,12 +2,13 @@ import { Injectable } from '@nestjs/common';
 import { DynamoDBConfigService } from 'src/config/dynamodb.config';
 import { Book, BorrowInfo } from './entities/book.entity';
 import {
+  DeleteCommand,
   DynamoDBDocumentClient,
   GetCommand,
   PutCommand,
   UpdateCommand,
 } from '@aws-sdk/lib-dynamodb';
-import { ReturnValue } from '@aws-sdk/client-dynamodb';
+import { ReturnValue, TableAlreadyExistsException } from '@aws-sdk/client-dynamodb';
 
 @Injectable()
 export class BooksRepository {
@@ -147,6 +148,22 @@ export class BooksRepository {
     } catch (error) {
       console.error('Error fetching book from DynamoDB:', error);
       throw new Error('Failed to fetch book from database.');
+    }
+  }
+
+  //Delete a book by ID
+  async delete(bookId: string): Promise<any> {
+    const params = {
+      TableName: process.env.DYNAMODB_TABLE_NAME,
+      Key: { book_id: bookId },
+      ConditionExpression: 'attribute_exists(book_id)',
+    };
+    try {
+      await this.dynamoDBDocumentClient.send(new DeleteCommand(params));
+      return { message: 'Book deleted successfully' };
+    } catch (error) {
+      console.error('Error deleting book from DynamoDB:', error);
+      throw new Error('Failed to delete book from database.');
     }
   }
 }
