@@ -1,13 +1,17 @@
 import { Injectable } from '@nestjs/common';
 import { DynamoDBConfigService } from 'src/config/dynamodb.config';
 import { Book, BorrowInfo } from './entities/book.entity';
-import { GetItemCommand } from '@aws-sdk/client-dynamodb';
+import { GetItemCommand, PutItemCommand } from '@aws-sdk/client-dynamodb';
+import { S3Service } from 'src/services/s3.service';
 
 @Injectable()
 export class BooksRepository {
   private readonly tableName = process.env.DYNAMODB_TABLE_NAME || 'books';
 
-  constructor(private readonly dynamoDBConfigService: DynamoDBConfigService) {}
+  constructor(
+    private readonly dynamoDBConfigService: DynamoDBConfigService,
+    private readonly s3Service: S3Service,
+  ) {}
 
   private getClient() {
     return this.dynamoDBConfigService.getClient();
@@ -88,4 +92,22 @@ export class BooksRepository {
   }
 
   //Create a new Book
+  async create(book: Book, coverFilePath: string): Promise<Book> {
+    const client = this.getClient();
+
+    //Upload  the cover image to S3 and get the URL
+    const coverUrl = await this.s3Service.uploadCover(coverFilePath, process.env.S3_BUCKET_NAME);
+
+    //Set the URL in the book object 
+    book.cover = coverUrl;
+
+    //Prepare DynamoDB parameters for book creation 
+    const params = {
+        TableName: this.tableName,
+        Item: this.mapBookToDynamoDBItem(book),
+    }
+
+    await client.send(new PutItemCommand(params));
+    return book;
+  }
 }
