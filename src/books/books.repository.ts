@@ -134,6 +134,22 @@ export class BooksRepository {
     }
   }
 
+  //Delete a book by ID
+  async delete(bookId: string): Promise<any> {
+    const params = {
+      TableName: process.env.DYNAMODB_TABLE_NAME,
+      Key: { book_id: bookId },
+      ConditionExpression: 'attribute_exists(book_id)',
+    };
+    try {
+      await this.dynamoDBDocumentClient.send(new DeleteCommand(params));
+      return { message: 'Book deleted successfully' };
+    } catch (error) {
+      console.error('Error deleting book from DynamoDB:', error);
+      throw new Error('Failed to delete book from database.');
+    }
+  }
+
   //Get a single book by ID
   async findById(bookId: string): Promise<Book> {
     const params = {
@@ -151,19 +167,4 @@ export class BooksRepository {
     }
   }
 
-  //Delete a book by ID
-  async delete(bookId: string): Promise<any> {
-    const params = {
-      TableName: process.env.DYNAMODB_TABLE_NAME,
-      Key: { book_id: bookId },
-      ConditionExpression: 'attribute_exists(book_id)',
-    };
-    try {
-      await this.dynamoDBDocumentClient.send(new DeleteCommand(params));
-      return { message: 'Book deleted successfully' };
-    } catch (error) {
-      console.error('Error deleting book from DynamoDB:', error);
-      throw new Error('Failed to delete book from database.');
-    }
-  }
 }

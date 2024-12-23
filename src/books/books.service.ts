@@ -92,4 +92,13 @@ export class BooksService {
     }
     await this.booksRepository.delete(bookId);
   }
+
+  //Get a book by its ID
+  async getBookById(bookId: string): Promise<Book> {
+    const book = await this.booksRepository.findById(bookId);
+    if (!book) {
+      throw new BadRequestException('Book not found');
+    }
+    return book;
+  }
 }

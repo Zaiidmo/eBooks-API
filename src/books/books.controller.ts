@@ -51,4 +51,18 @@ export class BooksController {
       throw error;
     }
   }
+
+  //Get a single book by its ID
+  @Get(':id')
+  async getBook(@Param('id') bookId: string): Promise<any> {
+    try {
+      const book = await this.booksService.getBookById(bookId);
+      return book;
+    } catch (error) {
+      if (error.message === 'Book not found.') {
+        throw new NotFoundException(error.message);
+      }
+      throw error;
+    }
+  }
 }
