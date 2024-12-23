@@ -1,10 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { DynamoDBConfigService } from 'src/config/dynamodb.config';
 import { Book, BorrowInfo } from './entities/book.entity';
-import { GetItemCommand, PutItemCommand } from '@aws-sdk/client-dynamodb';
-import { S3ConfigService } from 'src/services/s3.service';
-import { v4 as uuidv4 } from 'uuid';
-import { DynamoDBDocumentClient, PutCommand } from '@aws-sdk/lib-dynamodb';
+import { DynamoDBDocumentClient, PutCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
 
 @Injectable()
 export class BooksRepository {
@@ -88,6 +85,42 @@ export class BooksRepository {
     } catch (error) {
       console.error('Error creating book in DynamoDB:', error);
       throw new Error('Failed to create book in database.');
+    }
+  }
+
+  //Update an existing book
+  async update(bookId: string, updatedFields: Partial<Book>): Promise<void> {
+    const UpdateExpression = [];
+    const expressionAttributeNames = {};
+    const expressionAttributeValues = {};
+
+    // Build the update expression dynamically
+    for (const [key, value] of Object.entries(updatedFields)) {
+      if (value !== undefined) {
+        UpdateExpression.push(`#${key} = :${key}`);
+        expressionAttributeNames[`#${key}`] = key;
+        expressionAttributeValues[`:${key}`] = value;
+      }
+    }
+
+    // If no fields to update, throw an error
+    if (UpdateExpression.length === 0) {
+      throw new Error('No fields provided for update.');
+    }
+
+    const params = {
+      TableName: process.env.DYNAMODB_TABLE_NAME,
+      Key: { book_id: bookId },
+      UpdateExpression: `SET ${UpdateExpression.join(', ')}`,
+      ExpressionAttributeNames: expressionAttributeNames,
+      ExpressionAttributeValues: expressionAttributeValues,
+    };
+
+    try {
+      await this.dynamoDBDocumentClient.send(new UpdateCommand(params));
+    } catch (error) {
+      console.error('Error updating book in DynamoDB:', error);
+      throw new Error('Failed to update book in database.');
     }
   }
 }
