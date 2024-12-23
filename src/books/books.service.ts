@@ -53,4 +53,33 @@ export class BooksService {
       throw new BadRequestException('Failed to create book');
     }
   }
+
+  //Update an existing book
+  async updateBook(
+    bookId: string,
+    updatedFields: UpdateBookDto,
+  ): Promise<void> {
+    //Validate the input fields 
+    if(updatedFields.price !== undefined && updatedFields.price < 0) {
+      throw new BadRequestException('Price must be a positive number');
+    }
+    if(updatedFields.quantity !== undefined && updatedFields.quantity < 0) {
+      throw new BadRequestException('Quantity must be a positive number');
+    }
+
+    //Check if the book exists 
+    const book = await this.booksRepository.findById(bookId);
+    if (!book) {
+      throw new BadRequestException('Book not found');
+    }
+
+    //Update the book object
+    const updatedBook: Book = {
+      ...book,
+      ...updatedFields,
+      updatedAt: new Date().toISOString(),
+    };
+
+    await this.booksRepository.update(bookId, updatedBook);
+  }
 }

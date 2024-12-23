@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UploadedFile, UseInterceptors, Put } from '@nestjs/common';
 import { BooksService } from './books.service';
 import { CreateBookDto } from './dto/create-book.dto';
 import { UpdateBookDto } from './dto/update-book.dto';
@@ -18,6 +18,20 @@ export class BooksController {
     try {
       await this.booksService.createBook(createBookDto, file);
       return { message: 'Book created successfully' };
+    } catch (error) {
+      return { error: error.message };
+    }
+  }
+
+  //Update An Existing Book
+  @Put(':id')
+  async updateBook(
+    @Param('id') bookId: string,
+    @Body() updateBookDto: UpdateBookDto,
+  ) : Promise<any>{
+    try {
+      await this.booksService.updateBook(bookId, updateBookDto);
+      return { message: 'Book updated successfully' };
     } catch (error) {
       return { error: error.message };
     }
