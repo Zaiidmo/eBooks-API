@@ -28,7 +28,7 @@ export class BooksService {
     const updatedAt = createdAt;
 
     //Upload cover to S3 
-    const key = `covers/${bookId}/${file.originalname}`;
+    const key = `covers/${file.originalname}`;
     const coverUrl = await this.s3Service.uploadCover(file, key);
 
     //  Create a new book object
