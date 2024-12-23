@@ -101,4 +101,9 @@ export class BooksService {
     }
     return book;
   }
+
+  //Get all books
+  async getAllBooks(): Promise<Book[]> {
+    return this.booksRepository.findAll();
+  }
 }

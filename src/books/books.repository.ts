@@ -8,7 +8,12 @@ import {
   PutCommand,
   UpdateCommand,
 } from '@aws-sdk/lib-dynamodb';
-import { ReturnValue, TableAlreadyExistsException } from '@aws-sdk/client-dynamodb';
+import {
+  ReturnValue,
+  ScanCommand,
+  TableAlreadyExistsException,
+} from '@aws-sdk/client-dynamodb';
+import { GetBookResponseDto } from './dto/get-book-response.dto';
 
 @Injectable()
 export class BooksRepository {
@@ -120,12 +125,12 @@ export class BooksRepository {
     if (updateExpressions.length === 0) {
       throw new Error('No updatable fields provided.');
     }
-  
+
     params.UpdateExpression = `SET ${updateExpressions.join(', ')}`;
-  
+
     try {
       const result = await this.dynamoDBDocumentClient.send(
-        new UpdateCommand(params)
+        new UpdateCommand(params),
       );
       console.log('Book updated successfully:', result);
     } catch (error) {
@@ -167,4 +172,21 @@ export class BooksRepository {
     }
   }
 
+  //Get all books
+  async findAll(): Promise<GetBookResponseDto[]> {
+    const params = {
+      TableName: process.env.DYNAMODB_TABLE_NAME,
+    };
+
+    try {
+      const result = await this.dynamoDBDocumentClient.send(
+        new ScanCommand(params)
+      );
+      
+      return result.Items as GetBookResponseDto[];
+    } catch (error) {
+      console.error('Error fetching books from DynamoDB:', error);
+      throw new Error('Failed to fetch books from database.');
+    }
+  }
 }

@@ -65,4 +65,15 @@ export class BooksController {
       throw error;
     }
   }
+
+  //Get all books
+  @Get()
+  async getAllBooks(): Promise<any> {
+    try {
+      const books = await this.booksService.getAllBooks();
+      return books;
+    } catch (error) {
+      return { error: error.message };
+    }
+  }
 }
