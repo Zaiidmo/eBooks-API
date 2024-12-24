@@ -34,7 +34,7 @@ export class BooksController {
       await this.booksService.updateBook(bookId, updateBookDto);
       return { message: 'Book updated successfully' };
     } catch (error) {
-      return { error: error.message };
+      throw error ;
     }
   }
 
