@@ -1,18 +1,216 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { BadRequestException } from '@nestjs/common';
 import { BooksService } from './books.service';
+import { BooksRepository } from './books.repository';
+import { S3ConfigService } from '@/services/s3.service';
+import { CreateBookDto } from './dto/create-book.dto';
+import { UpdateBookDto } from './dto/update-book.dto';
+import { Book } from './entities/book.entity';
 
 describe('BooksService', () => {
-  let service: BooksService;
+  let booksService: BooksService;
+  let booksRepository: jest.Mocked<BooksRepository>;
+  let s3Service: jest.Mocked<S3ConfigService>;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [BooksService],
+      providers: [
+        BooksService,
+        {
+          provide: BooksRepository,
+          useValue: {
+            create: jest.fn(),
+            findById: jest.fn(),
+            update: jest.fn(),
+            delete: jest.fn(),
+            getAllBooks: jest.fn(),
+          },
+        },
+        {
+          provide: S3ConfigService,
+          useValue: {
+            uploadCover: jest.fn(),
+          },
+        },
+      ],
     }).compile();
 
-    service = module.get<BooksService>(BooksService);
+    booksService = module.get<BooksService>(BooksService);
+    booksRepository = module.get(BooksRepository);
+    s3Service = module.get(S3ConfigService);
   });
 
-  it('should be defined', () => {
-    expect(service).toBeDefined();
+  describe('createBook', () => {
+    it('should throw an error if no file is provided', async () => {
+      const createBookDto: CreateBookDto = {
+        title: 'Test Book',
+        author: 'Author',
+        category: 'Category',
+        cover: 'cover.jpg',
+        quantity: 5,
+        description: 'Description',
+        price: 10.99,
+      };
+
+      await expect(
+        booksService.createBook(createBookDto, null),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should create a new book successfully', async () => {
+      const createBookDto: CreateBookDto = {
+        title: 'Test Book',
+        author: 'Author',
+        category: 'Category',
+        cover: 'cover.jpg',
+        quantity: 5,
+        description: 'Description',
+        price: 10.99,
+      };
+      const file = { originalname: 'cover.jpg' } as Express.Multer.File;
+      const mockCoverUrl = 'https://s3.amazon.com/covers/cover.jpg';
+
+      s3Service.uploadCover.mockResolvedValue(mockCoverUrl);
+
+      await booksService.createBook(createBookDto, file);
+
+      expect(s3Service.uploadCover).toHaveBeenCalledWith(file, expect.any(String));
+      expect(booksRepository.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: createBookDto.title,
+          cover: mockCoverUrl,
+        }),
+      );
+    });
+  });
+
+  describe('updateBook', () => {
+    it('should throw an error if book is not found', async () => {
+      booksRepository.findById.mockResolvedValue(null);
+
+      await expect(
+        booksService.updateBook('invalid-id', { title: 'Updated Title' }),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should update a book successfully', async () => {
+      const existingBook: Book = {
+        book_id: 'book-id',
+        title: 'Original Title',
+        author: 'Author',
+        category: 'Category',
+        quantity: 5,
+        cover: 'https://s3.amazon.com/covers/cover.jpg',
+        description: 'Description',
+        price: 10.99,
+        borrowedBy: [],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      booksRepository.findById.mockResolvedValue(existingBook);
+
+      await booksService.updateBook(existingBook.book_id, { title: 'Updated Title' });
+
+      expect(booksRepository.update).toHaveBeenCalledWith(
+        existingBook.book_id,
+        expect.objectContaining({
+          title: 'Updated Title',
+        }),
+      );
+    });
+  });
+
+  describe('deleteBook', () => {
+    it('should throw an error if book is not found', async () => {
+      booksRepository.findById.mockResolvedValue(null);
+
+      await expect(booksService.deleteBook('invalid-id')).rejects.toThrow(
+        BadRequestException,
+      );
+    });
+
+    it('should delete a book successfully', async () => {
+      const bookId = 'book-id';
+      const existingBook: Book = {
+        book_id: bookId,
+        title: 'Title',
+        author: 'Author',
+        category: 'Category',
+        quantity: 5,
+        cover: 'https://s3.amazon.com/covers/cover.jpg',
+        description: 'Description',
+        price: 10.99,
+        borrowedBy: [],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+
+      booksRepository.findById.mockResolvedValue(existingBook);
+
+      await booksService.deleteBook(bookId);
+
+      expect(booksRepository.delete).toHaveBeenCalledWith(bookId);
+    });
+  });
+
+  describe('getBookById', () => {
+    it('should throw an error if book is not found', async () => {
+      booksRepository.findById.mockResolvedValue(null);
+
+      await expect(booksService.getBookById('invalid-id')).rejects.toThrow(
+        BadRequestException,
+      );
+    });
+
+    it('should return the book successfully', async () => {
+      const bookId = 'book-id';
+      const book: Book = {
+        book_id: bookId,
+        title: 'Title',
+        author: 'Author',
+        category: 'Category',
+        quantity: 5,
+        cover: 'https://s3.amazon.com/covers/cover.jpg',
+        description: 'Description',
+        price: 10.99,
+        borrowedBy: [],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+
+      booksRepository.findById.mockResolvedValue(book);
+
+      const result = await booksService.getBookById(bookId);
+
+      expect(result).toEqual(book);
+    });
+  });
+
+  describe('getAllBooks', () => {
+    it('should return all books', async () => {
+      const books: Book[] = [
+        {
+          book_id: 'book-1',
+          title: 'Title 1',
+          author: 'Author 1',
+          category: 'Category 1',
+          quantity: 5,
+          cover: 'https://s3.amazon.com/covers/cover1.jpg',
+          description: 'Description 1',
+          price: 10.99,
+          borrowedBy: [],
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        },
+      ];
+
+      booksRepository.getAllBooks.mockResolvedValue(books);
+
+      const result = await booksService.getAllBooks();
+
+      expect(result.books.length).toBe(1);
+      expect(result.books[0].title).toBe('Title 1');
+      expect(result.totalBooks).toBe(1);
+    });
   });
 });

@@ -3,9 +3,8 @@ import { CreateBookDto } from './dto/create-book.dto';
 import { UpdateBookDto } from './dto/update-book.dto';
 import { BooksRepository } from './books.repository';
 import { Book } from './entities/book.entity';
-import { S3ConfigService } from 'src/services/s3.service';
+import { S3ConfigService } from '@/services/s3.service';
 import { v4 as uuidv4 } from 'uuid';
-import { DeleteBookDto } from './dto/delete-book.dto';
 import { GetBookResponseDto, GetBooksResponseDto } from './dto/get-book-response.dto';
 
 @Injectable()

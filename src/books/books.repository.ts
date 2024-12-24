@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { DynamoDBConfigService } from 'src/config/dynamodb.config';
+import { DynamoDBConfigService } from '../config/dynamodb.config';
 import { Book, BorrowInfo } from './entities/book.entity';
 import {
   DeleteCommand,
