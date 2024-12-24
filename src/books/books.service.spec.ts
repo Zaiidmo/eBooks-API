@@ -82,6 +82,25 @@ describe('BooksService', () => {
         }),
       );
     });
+
+    it('should throw error when uploading cover fails', async () => {
+      const createBookDto: CreateBookDto = {
+        title: 'Test Book',
+        author: 'Author',
+        category: 'Category',
+        cover: 'cover.jpg',
+        quantity: 5,
+        description: 'Description',
+        price: 10.99,
+      };
+      const file = { originalname: 'cover.jpg' } as Express.Multer.File;
+
+      s3Service.uploadCover.mockRejectedValue(new Error('S3 upload failed'));
+
+      await expect(
+        booksService.createBook(createBookDto, file),
+      ).rejects.toThrow(Error);
+    });
   });
 
   describe('updateBook', () => {
@@ -90,6 +109,18 @@ describe('BooksService', () => {
 
       await expect(
         booksService.updateBook('invalid-id', { title: 'Updated Title' }),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should throw an error if price is negative', async () => {
+      await expect(
+        booksService.updateBook('valid-id', { price: -5 } as UpdateBookDto),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should throw an error if quantity is negative', async () => {
+      await expect(
+        booksService.updateBook('valid-id', { quantity: -1 } as UpdateBookDto),
       ).rejects.toThrow(BadRequestException);
     });
 
@@ -211,6 +242,15 @@ describe('BooksService', () => {
       expect(result.books.length).toBe(1);
       expect(result.books[0].title).toBe('Title 1');
       expect(result.totalBooks).toBe(1);
+    });
+
+    it('should return empty list when no books exist', async () => {
+      booksRepository.getAllBooks.mockResolvedValue([]);
+
+      const result = await booksService.getAllBooks();
+
+      expect(result.books.length).toBe(0);
+      expect(result.totalBooks).toBe(0);
     });
   });
 });
