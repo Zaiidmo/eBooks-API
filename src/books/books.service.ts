@@ -6,6 +6,7 @@ import { Book } from './entities/book.entity';
 import { S3ConfigService } from 'src/services/s3.service';
 import { v4 as uuidv4 } from 'uuid';
 import { DeleteBookDto } from './dto/delete-book.dto';
+import { GetBookResponseDto, GetBooksResponseDto } from './dto/get-book-response.dto';
 
 @Injectable()
 export class BooksService {
@@ -103,7 +104,24 @@ export class BooksService {
   }
 
   //Get all books
-  async getAllBooks(): Promise<Book[]> {
-    return this.booksRepository.findAll();
+  async getAllBooks(): Promise<GetBooksResponseDto> {
+    const books = await this.booksRepository.getAllBooks();
+    
+    return {
+      books: books.map(book => this.transformToResponseDto(book)),
+      totalBooks: books.length
+    };
+  }
+
+  private transformToResponseDto(book: Book): GetBookResponseDto {
+    return {
+      title: book.title,
+      author: book.author,
+      category: book.category,
+      quantity: book.quantity,
+      cover: book.cover,
+      description: book.description,
+      price: book.price,
+    };
   }
 }

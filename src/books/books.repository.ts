@@ -173,7 +173,7 @@ export class BooksRepository {
   }
 
   //Get all books
-  async findAll(): Promise<GetBookResponseDto[]> {
+  async getAllBooks(): Promise<Book[]> {
     const params = {
       TableName: process.env.DYNAMODB_TABLE_NAME,
     };
@@ -183,10 +183,29 @@ export class BooksRepository {
         new ScanCommand(params)
       );
       
-      return result.Items as GetBookResponseDto[];
+      const books = result.Items ? 
+        result.Items.map(item => this.convertDynamoItemToBook(item)) : 
+        [];
+      
+      return books;
     } catch (error) {
       console.error('Error fetching books from DynamoDB:', error);
       throw new Error('Failed to fetch books from database.');
     }
+  }
+
+  private convertDynamoItemToBook(item: Record<string, any>): Book {
+    return {
+      book_id: String(item.book_id),
+      title: String(item.title),
+      author: String(item.author),
+      category: String(item.category),
+      quantity: Number(item.quantity),
+      cover: String(item.cover),
+      description: String(item.description),
+      price: Number(item.price),
+      createdAt: String(item.createdAt),
+      updatedAt: String(item.updatedAt)
+    };
   }
 }
