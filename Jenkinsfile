@@ -9,24 +9,28 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                checkouut scm
+                // Fixed the typo 'checkouut' to 'checkout'
+                checkout scm
             }
         }
 
         stage('Install Dependencies') {
             steps {
+                // Install project dependencies
                 sh 'npm install'
             }
         }
 
         stage('Test') {
             steps {
+                // Run tests
                 sh 'npm test'
             }
         }
 
         stage('Build') {
             steps {
+                // Build the application
                 sh 'npm run build'
             }
         }
@@ -34,13 +38,15 @@ pipeline {
         stage('Docker Build') {
             steps {
                 script {
-                    docker.build "${DOCKER_IMAGE}:${DOCKER_TAG}"
+                    // Build Docker image
+                    docker.build("${DOCKER_IMAGE}:${DOCKER_TAG}")
                 }
             }
         }
 
         stage('Deploy') {
             steps {
+                // Stop and remove the previous container if it exists, then run the new one
                 sh """
                     docker stop ${DOCKER_IMAGE} || true
                     docker rm ${DOCKER_IMAGE} || true
@@ -49,6 +55,18 @@ pipeline {
                         ${DOCKER_IMAGE}:${DOCKER_TAG}
                 """
             }
+        }
+    }
+
+    post {
+        always {
+            echo 'Pipeline finished'
+        }
+        success {
+            echo 'Pipeline succeeded!'
+        }
+        failure {
+            echo 'Pipeline failed!'
         }
     }
 }
