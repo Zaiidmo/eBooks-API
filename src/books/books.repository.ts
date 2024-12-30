@@ -132,7 +132,7 @@ export class BooksRepository {
       const result = await this.dynamoDBDocumentClient.send(
         new UpdateCommand(params),
       );
-      console.log('Book updated successfully:', result);
+      // console.log('Book updated successfully:', result);
     } catch (error) {
       console.error('Error updating book in DynamoDB:', error);
       throw new Error('Failed to update book in database.');
@@ -186,6 +186,8 @@ export class BooksRepository {
       const books = result.Items ? 
         result.Items.map(item => this.convertDynamoItemToBook(item)) : 
         [];
+        // console.log('Books:', result.Items);
+        
       
       return books;
     } catch (error) {
@@ -194,18 +196,18 @@ export class BooksRepository {
     }
   }
 
-  private convertDynamoItemToBook(item: Record<string, any>): Book {
-    return {
-      book_id: String(item.book_id),
-      title: String(item.title),
-      author: String(item.author),
-      category: String(item.category),
-      quantity: Number(item.quantity),
-      cover: String(item.cover),
-      description: String(item.description),
-      price: Number(item.price),
-      createdAt: String(item.createdAt),
-      updatedAt: String(item.updatedAt)
-    };
-  }
+ private convertDynamoItemToBook(item: Record<string, any>): Book {
+  return {
+    book_id: item.book_id.S,
+    title: item.title.S,
+    author: item.author.S,
+    category: item.category.S,
+    quantity: Number(item.quantity.S),
+    cover: item.cover.S,
+    description: item.description.S,
+    price: Number(item.price.S),
+    createdAt: item.createdAt.S,
+    updatedAt: item.updatedAt.S
+  };
+}
 }

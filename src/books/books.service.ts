@@ -105,6 +105,7 @@ export class BooksService {
   //Get all books
   async getAllBooks(): Promise<GetBooksResponseDto> {
     const books = await this.booksRepository.getAllBooks();
+    // console.log('books:', books);
     
     return {
       books: books.map(book => this.transformToResponseDto(book)),
@@ -114,6 +115,7 @@ export class BooksService {
 
   private transformToResponseDto(book: Book): GetBookResponseDto {
     return {
+      id: book.book_id,
       title: book.title,
       author: book.author,
       category: book.category,

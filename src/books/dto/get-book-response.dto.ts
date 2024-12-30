@@ -6,6 +6,7 @@ export class PublicBorrowInfoDto {
   
   // Base DTO for public book information
   export class GetBookResponseDto {
+    id: string;
     title: string;
     author: string;
     category: string;
@@ -13,7 +14,6 @@ export class PublicBorrowInfoDto {
     cover: string;
     description: string;
     price: number;
-    activeBorrows?: PublicBorrowInfoDto[];
   }
   
   // For getting multiple books
