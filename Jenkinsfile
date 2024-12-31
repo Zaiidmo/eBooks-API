@@ -1,15 +1,17 @@
 pipeline {
-    agent any
+    agent {
+        label 'books-service-slave'
+    }
 
     environment {
         DOCKER_IMAGE = 'books-service'
         DOCKER_TAG = "${BUILD_NUMBER}"
+        BACKEND_HOST = '13.48.59.16'
     }
 
     stages {
         stage('Checkout') {
             steps {
-                // Fixed the typo 'checkouut' to 'checkout'
                 checkout scm
             }
         }
@@ -46,14 +48,17 @@ pipeline {
 
         stage('Deploy') {
             steps {
-                // Stop and remove the previous container if it exists, then run the new one
-                sh """
-                    docker stop ${DOCKER_IMAGE} || true
-                    docker rm ${DOCKER_IMAGE} || true
-                    docker run -d --name ${DOCKER_IMAGE} \
-                        -p 3000:3000 \
-                        ${DOCKER_IMAGE}:${DOCKER_TAG}
-                """
+                sshagent(['backend-instance-ssh']) { 
+                    sh """
+                        ssh -o StrictHostKeyChecking=no ubuntu@\${BACKEND_HOST} '
+                            docker stop ${DOCKER_IMAGE} || true
+                            docker rm ${DOCKER_IMAGE} || true
+                            docker run -d --name ${DOCKER_IMAGE} \
+                                -p 3000:3000 \
+                                ${DOCKER_IMAGE}:${DOCKER_TAG}
+                        '
+                    """
+                }
             }
         }
     }
