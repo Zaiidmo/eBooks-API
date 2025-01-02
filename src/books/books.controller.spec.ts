@@ -149,6 +149,7 @@ describe('BooksController', () => {
     it('should return all books', async () => {
       const books: GetBooksResponseDto = { books: [
         {
+          id: 'book-id',
           title: 'Title 1',
           author: 'Author 1',
           category: 'Category 1',
