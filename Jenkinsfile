@@ -12,7 +12,7 @@ pipeline {
     }
 
     tools {
-        nodejs 'NodeJS 20.0.0'
+        nodejs 'Node-20.9.0'
     }
 
     stages {
@@ -32,6 +32,7 @@ pipeline {
         stage('Install Dependencies') {
             steps {
                 sh '''
+                    npm cache clean --force
                     npm install -g @nestjs/cli
                     npm install
                 '''
