@@ -8,6 +8,7 @@ pipeline {
         BOOKS_SERVICE_DIR = '/home/ubuntu/eBooks-API'
         GIT_REPO = 'git@github.com:Zaiidmo/eBooks-API.git'
         WORKSPACE = "${JENKINS_HOME}/workspace/books-service-pipeline"
+        NODE_OPTIONS = '--max_old_space_size=4096'  
     }
 
     tools {
@@ -30,7 +31,10 @@ pipeline {
 
         stage('Install Dependencies') {
             steps {
-                sh 'npm install'
+                sh '''
+                    npm install -g @nestjs/cli
+                    npm install
+                '''
             }
         }
 
