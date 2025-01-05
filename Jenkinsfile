@@ -39,11 +39,11 @@ pipeline {
             }
         }
 
-        // stage('Test') {
-        //     steps {
-        //         sh 'npm test'
-        //     }
-        // }
+        stage('Test') {
+            steps {
+                sh 'npm test'
+            }
+        }
 
         stage('Build') {
             steps {
@@ -56,8 +56,7 @@ pipeline {
                 sshagent(['jenkins-slave-key']) {
                     script {
                         sh """
-                            ssh -o StrictHostKeyChecking=no $DEPLOY_SERVER "
-                                mkdir -p ${BOOKS_SERVICE_DIR} && \
+                            ssh -o StrictHostKeyChecking=no ${DEPLOY_SERVER} "
                                 cd ${BOOKS_SERVICE_DIR} && \
                                 git pull origin master || git clone ${GIT_REPO} . && \
                                 npm install && \
