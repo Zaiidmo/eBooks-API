@@ -1,40 +1,48 @@
 pipeline {
-    agent any
+    agent {
+        label 'slave'
+    }
 
     environment {
-        DEPLOY_SERVER = 'ubuntu@3.124.192.157'    // Remote deployment server
-        BOOKS_SERVICE_DIR = '/home/ubuntu/eBooks-API'  // Directory for the eBooks API on the server
-        GIT_REPO = 'git@github.com:Zaiidmo/eBooks-API.git'  // GitHub repository URL
+        DEPLOY_SERVER = 'ubuntu@3.124.192.157'
+        BOOKS_SERVICE_DIR = '/home/ubuntu/eBooks-API'
+        GIT_REPO = 'git@github.com:Zaiidmo/eBooks-API.git'
+        WORKSPACE = "${JENKINS_HOME}/workspace/books-service-pipeline"
     }
 
     tools {
-        nodejs 'NodeJS 20.0.0'  // Define Node.js version
+        nodejs 'NodeJS 20.0.0'
     }
 
     stages {
+        stage('Cleanup Workspace') {
+            steps {
+                cleanWs()
+            }
+        }
+
         stage('Checkout') {
             steps {
-                checkout scm  // Checkout the code from the GitHub repository
+                git branch: 'master',
+                    url: "${GIT_REPO}"
             }
         }
 
         stage('Install Dependencies') {
             steps {
-                sh 'npm install'  // Install dependencies
+                sh 'npm install'
             }
         }
 
         stage('Test') {
             steps {
-                // Run tests
-                sh 'npm test'  // Run tests if any
+                sh 'npm test'
             }
         }
 
         stage('Build') {
             steps {
-                // Build the application (you can define any build steps here if needed)
-                sh 'npm run build'  // Run the build process
+                sh 'npm run build'
             }
         }
 
@@ -42,13 +50,13 @@ pipeline {
             steps {
                 sshagent(['jenkins-slave-key']) {
                     script {
-                        // SSH into the deployment server and deploy the code
-                        // Ensure the books-service is pulled and restarted
                         sh """
                             ssh -o StrictHostKeyChecking=no $DEPLOY_SERVER "
-                                cd $BOOKS_SERVICE_DIR && \
-                                git pull origin master && \
+                                mkdir -p ${BOOKS_SERVICE_DIR} && \
+                                cd ${BOOKS_SERVICE_DIR} && \
+                                git pull origin master || git clone ${GIT_REPO} . && \
                                 npm install && \
+                                npm run build && \
                                 pm2 restart eBooks-API || pm2 start npm --name 'eBooks-API' -- start
                             "
                         """
@@ -61,6 +69,7 @@ pipeline {
     post {
         always {
             echo 'Pipeline finished'
+            cleanWs()
         }
         success {
             echo 'Pipeline succeeded!'
