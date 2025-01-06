@@ -3,19 +3,23 @@ export class Book {
   title: string;
   author: string;
   category: string;
+  isbn: string;
   quantity: number;
-  cover: string;
+  cover?: string;
   description: string;
   price: number;
-  borrowedBy?: BorrowInfo[];
+  borrowedBy?: Borrow[];
   createdAt: string;
   updatedAt: string;
 }
 
-export class BorrowInfo {
-  user_id: string;
-  borrow_date: string;
-  dueDate: string;
+
+export class Borrow {
+  userId: string;
+  borrowDate: string;
+  expectedReturnDate: string;
+  actualReturnDate?: string;
+  status: 'ACTIVE' | 'RETURNED' | 'OVERDUE';
 }
 
 export enum BookCategory {

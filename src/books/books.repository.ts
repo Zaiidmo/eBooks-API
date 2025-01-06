@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { DynamoDBConfigService } from '../config/dynamodb.config';
-import { Book, BorrowInfo } from './entities/book.entity';
+import { Book, Borrow } from './entities/book.entity';
 import {
   DeleteCommand,
   DynamoDBDocumentClient,
@@ -13,7 +13,6 @@ import {
   ScanCommand,
   TableAlreadyExistsException,
 } from '@aws-sdk/client-dynamodb';
-import { GetBookResponseDto } from './dto/get-book-response.dto';
 
 @Injectable()
 export class BooksRepository {
@@ -31,6 +30,7 @@ export class BooksRepository {
       book_id: item.book_id.S,
       title: item.title.S,
       author: item.author.S,
+      isbn: item.isbn.S,
       category: item.category.S,
       quantity: parseInt(item.quantity.N, 10),
       cover: item.cover.S,
@@ -43,11 +43,15 @@ export class BooksRepository {
   }
 
   //Helper function to map DynamoDB response to BorrowInfo entity
-  private mapBorrowInfo(borrowInfoList: any[]): BorrowInfo[] {
+  private mapBorrowInfo(borrowInfoList: any[]): Borrow[] {
     return borrowInfoList.map((borrowInfoItem) => ({
-      user_id: borrowInfoItem.M.user_id.S,
-      borrow_date: borrowInfoItem.M.borrow_date.S,
-      dueDate: borrowInfoItem.M.dueDate.S,
+      borrow_id: borrowInfoItem.M.borrow_id.S,
+      userId: borrowInfoItem.M.user_id.S,
+      bookId: borrowInfoItem.M.book_id.S,
+      borrowDate: borrowInfoItem.M.borrow_date.S,
+      expectedReturnDate: borrowInfoItem.M.expectedReturnDate.S,
+      actualReturnDate: borrowInfoItem.M.actualReturnDate.S,
+      status: borrowInfoItem.M.status.S
     }));
   }
 
@@ -75,12 +79,14 @@ export class BooksRepository {
   }
 
   // Helper function to map BorrowInfo object to DynamoDB Item
-  private mapBorrowInfoToDynamoDB(borrow: BorrowInfo): any {
+  private mapBorrowInfoToDynamoDB(borrow: Borrow): any {
     return {
       M: {
-        user_id: { S: borrow.user_id },
-        borrow_date: { S: borrow.borrow_date },
-        dueDate: { S: borrow.dueDate },
+        user_id: { S: borrow.userId },
+        borrow_date: { S: borrow.borrowDate },
+        expectedReturnDate: { S: borrow.expectedReturnDate },
+        actualReturnDate: { S: borrow.actualReturnDate },
+        status: { S: borrow.status },
       },
     };
   }
@@ -201,6 +207,7 @@ export class BooksRepository {
     book_id: item.book_id.S,
     title: item.title.S,
     author: item.author.S,
+    isbn: item.isbn.S ,
     category: item.category.S,
     quantity: Number(item.quantity.S),
     cover: item.cover.S,

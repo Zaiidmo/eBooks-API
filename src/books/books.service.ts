@@ -2,7 +2,7 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateBookDto } from './dto/create-book.dto';
 import { UpdateBookDto } from './dto/update-book.dto';
 import { BooksRepository } from './books.repository';
-import { Book } from './entities/book.entity';
+import { Book, Borrow } from './entities/book.entity';
 import { S3ConfigService } from '@/services/s3.service';
 import { v4 as uuidv4 } from 'uuid';
 import { GetBookResponseDto, GetBooksResponseDto } from './dto/get-book-response.dto';
@@ -38,6 +38,7 @@ export class BooksService {
       title: createBookDto.title,
       author: createBookDto.author,
       category: createBookDto.category,
+      isbn: createBookDto.isbn,
       quantity: createBookDto.quantity,
       cover: coverUrl,
       description: createBookDto.description,
@@ -113,11 +114,80 @@ export class BooksService {
     };
   }
 
+  //Borrow a book
+  async borrowBook(bookId: string, userId: string): Promise<void> {
+    const book = await this.booksRepository.findById(bookId);
+    if (!book) throw new BadRequestException('Book not found');
+    
+    if (book.quantity === 0) {
+      throw new BadRequestException('Book not available');
+    }
+
+    const hasActiveBorrow = book.borrowedBy.some(
+      b => b.userId === userId && b.status === 'ACTIVE'
+    );
+    if (hasActiveBorrow) {
+      throw new BadRequestException('Already borrowed this book');
+    }
+
+    const borrowRecord: Borrow = {
+      userId,
+      borrowDate: new Date().toISOString(),
+      expectedReturnDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+      status: 'ACTIVE'
+    };
+
+    const updatedBook = {
+      ...book,
+      quantity: book.quantity - 1,
+      borrowedBy: [...book.borrowedBy, borrowRecord],
+      updatedAt: new Date().toISOString()
+    };
+
+    await this.booksRepository.update(bookId, updatedBook);
+  }
+
+  // Return a borrowed book
+  async returnBook(bookId: string, userId: string): Promise<void> {
+    const book = await this.booksRepository.findById(bookId);
+    if (!book) throw new BadRequestException('Book not found');
+
+    const borrowRecord = book.borrowedBy.find(
+      b => b.userId === userId && b.status === 'ACTIVE'
+    );
+
+    if (!borrowRecord) {
+      throw new BadRequestException('No active borrow found');
+    }
+
+    const updatedBorrows = book.borrowedBy.map(b =>
+      b.userId === userId && b.status === 'ACTIVE'
+        ? { ...b, status: 'RETURNED' as const, actualReturnDate: new Date().toISOString() }
+        : b
+    );
+    
+    if (!borrowRecord) {
+      throw new BadRequestException('No active borrow found');
+    }
+
+
+    const updatedBook = {
+      ...book,
+      quantity: book.quantity + 1,
+      borrowedBy: updatedBorrows,
+      updatedAt: new Date().toISOString()
+    };
+
+    await this.booksRepository.update(bookId, updatedBook);
+  }
+
   private transformToResponseDto(book: Book): GetBookResponseDto {
+    
     return {
       id: book.book_id,
       title: book.title,
       author: book.author,
+      isbn: book.isbn,
       category: book.category,
       quantity: book.quantity,
       cover: book.cover,

@@ -16,7 +16,7 @@ describe('AppController', () => {
 
   describe('root', () => {
     it('should return "Hello World!"', () => {
-      expect(appController.getHello()).toBe("Another pipeline's test");
+      expect(appController.getHello()).toBe("v.1.0.0");
     });
   });
 });

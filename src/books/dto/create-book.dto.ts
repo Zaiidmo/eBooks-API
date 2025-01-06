@@ -31,5 +31,9 @@ export class CreateBookDto {
     @Min(1)
     quantity: number;
 
+    @IsNotEmpty()
+    @IsString()
+    isbn: string;
+
 
 }

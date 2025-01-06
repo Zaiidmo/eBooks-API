@@ -76,4 +76,28 @@ export class BooksController {
       return { error: error.message };
     }
   }
+
+  //Borrow a book 
+  @Post(':id/borrow')
+  async borrowBook(@Param('id') bookId: string, @Body('userId') userId: string): Promise<any> {
+    try {
+      console.log('Borrowing book:', bookId, userId);
+      
+      await this.booksService.borrowBook(bookId, userId);
+      return { message: 'Book borrowed successfully' };
+    } catch (error) {
+      return { error: error.message };
+    }
+  }
+
+  //Return a borrowed book
+  @Post(':id/return')
+  async returnBook(@Param('id') bookId: string, @Body('userId') userId: string): Promise<any> {
+    try {
+      await this.booksService.returnBook(bookId, userId);
+      return { message: 'Book returned successfully' };
+    } catch (error) {
+      return { error: error.message };
+    }
+  }
 }
