@@ -9,6 +9,7 @@ export class PublicBorrowInfoDto {
     id: string;
     title: string;
     author: string;
+    isbn: string;
     category: string;
     quantity: number;
     cover: string;

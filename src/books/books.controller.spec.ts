@@ -36,6 +36,7 @@ describe('BooksController', () => {
     it('should successfully create a book', async () => {
       const createBookDto: CreateBookDto = {
         title: 'Test Book',
+        isbn: 'isbn1',
         author: 'Author',
         category: 'Category',
         cover: 'cover.jpg',
@@ -61,6 +62,7 @@ describe('BooksController', () => {
       const existingBook: Book = {
         book_id: 'book-id',
         title: 'Original Title',
+        isbn: 'isbn1',
         author: 'Author',
         category: 'Category',
         quantity: 5,
@@ -118,6 +120,7 @@ describe('BooksController', () => {
       const book: Book = {
         book_id: bookId,
         title: 'Title',
+        isbn: 'isbn1',
         author: 'Author',
         category: 'Category',
         quantity: 5,
@@ -153,6 +156,7 @@ describe('BooksController', () => {
           title: 'Title 1',
           author: 'Author 1',
           category: 'Category 1',
+          isbn: 'isbn1',
           quantity: 5,
           cover: 'https://s3.amazon.com/covers/cover1.jpg',
           description: 'Description 1',

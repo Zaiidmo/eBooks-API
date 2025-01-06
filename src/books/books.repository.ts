@@ -13,7 +13,6 @@ import {
   ScanCommand,
   TableAlreadyExistsException,
 } from '@aws-sdk/client-dynamodb';
-import { GetBookResponseDto } from './dto/get-book-response.dto';
 
 @Injectable()
 export class BooksRepository {
@@ -31,6 +30,7 @@ export class BooksRepository {
       book_id: item.book_id.S,
       title: item.title.S,
       author: item.author.S,
+      isbn: item.isbn.S,
       category: item.category.S,
       quantity: parseInt(item.quantity.N, 10),
       cover: item.cover.S,
@@ -201,6 +201,7 @@ export class BooksRepository {
     book_id: item.book_id.S,
     title: item.title.S,
     author: item.author.S,
+    isbn: item.isbn.S,
     category: item.category.S,
     quantity: Number(item.quantity.S),
     cover: item.cover.S,
