@@ -1,71 +1,80 @@
 pipeline {
     agent {
-        label 'books-service-slave'
+        label 'slave'
     }
 
     environment {
-        DOCKER_IMAGE = 'books-service'
-        DOCKER_TAG = "${BUILD_NUMBER}"
-        BACKEND_HOST = '13.48.59.16'
+        DEPLOY_SERVER = 'ubuntu@3.124.192.157'
+        BOOKS_SERVICE_DIR = '/home/ubuntu/eBooks-API'
+        GIT_REPO = 'git@github.com:Zaiidmo/eBooks-API.git'
+        WORKSPACE = "${JENKINS_HOME}/workspace/books-service-pipeline"
+        NODE_OPTIONS = '--max_old_space_size=4096'  
+    }
+
+    tools {
+        nodejs 'Node-20.9.0'
     }
 
     stages {
+        stage('Cleanup Workspace') {
+            steps {
+                cleanWs()
+            }
+        }
+
         stage('Checkout') {
             steps {
-                checkout scm
+                git branch: 'master',
+                    url: "${GIT_REPO}"
             }
         }
 
         stage('Install Dependencies') {
             steps {
-                // Install project dependencies
-                sh 'npm install'
+                sh '''
+                    npm cache clean --force
+                    npm install -g @nestjs/cli
+                    npm install
+                '''
             }
         }
 
         stage('Test') {
             steps {
-                // Run tests
                 sh 'npm test'
             }
         }
 
         stage('Build') {
             steps {
-                // Build the application
                 sh 'npm run build'
             }
         }
 
-        stage('Docker Build') {
+        stage('Deploy to Books-Service') {
             steps {
-                script {
-                    // Build Docker image
-                    docker.build("${DOCKER_IMAGE}:${DOCKER_TAG}")
-                }
+                sshagent(['jenkins-slave-key']) {
+                    script {
+                        sh """
+                            ssh -o StrictHostKeyChecking=no ${DEPLOY_SERVER} "
+                                cd ${BOOKS_SERVICE_DIR} && \
+                                GIT_SSH_COMMAND='ssh -i ~/.ssh/jenkins_github_key -o StrictHostKeyChecking=no' git pull origin master && \
+                                npm install && \
+                                npm run build && \
+                                pm2 delete all && \
+                                pm2 start dist/src/main.js --name eBooks-API
+                            "
+                        """
+                    }
+                }   
             }
-        }
-
-        stage('Deploy') {
-            steps {
-                sshagent(['backend-instance-ssh']) { 
-                    sh """
-                        ssh -o StrictHostKeyChecking=no ubuntu@\${BACKEND_HOST} '
-                            docker stop ${DOCKER_IMAGE} || true
-                            docker rm ${DOCKER_IMAGE} || true
-                            docker run -d --name ${DOCKER_IMAGE} \
-                                -p 3000:3000 \
-                                ${DOCKER_IMAGE}:${DOCKER_TAG}
-                        '
-                    """
-                }
-            }
-        }
+    }
     }
 
     post {
         always {
             echo 'Pipeline finished'
+            cleanWs()
         }
         success {
             echo 'Pipeline succeeded!'
