@@ -5,7 +5,7 @@ export class Book {
   category: string;
   isbn: string;
   quantity: number;
-  cover: string;
+  cover?: string;
   description: string;
   price: number;
   borrowedBy?: Borrow[];
@@ -13,10 +13,9 @@ export class Book {
   updatedAt: string;
 }
 
+
 export class Borrow {
-  borrow_id: string;
   userId: string;
-  bookId: string;
   borrowDate: string;
   expectedReturnDate: string;
   actualReturnDate?: string;
