@@ -58,7 +58,7 @@ pipeline {
                         sh """
                             ssh -o StrictHostKeyChecking=no ${DEPLOY_SERVER} "
                                 cd ${BOOKS_SERVICE_DIR} && \
-                                git pull origin master  && \
+                                GIT_SSH_COMMAND='ssh -i ~/.ssh/jenkins_github_key -o StrictHostKeyChecking=no' git pull origin master && \
                                 npm install && \
                                 npm run build && \
                                 pm2 delete all && \
@@ -66,9 +66,9 @@ pipeline {
                             "
                         """
                     }
-                }
+                }   
             }
-        }
+    }
     }
 
     post {
