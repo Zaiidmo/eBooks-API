@@ -23,6 +23,8 @@ describe('BooksController', () => {
             deleteBook: jest.fn(),
             getBookById: jest.fn(),
             getAllBooks: jest.fn(),
+            borrowBook: jest.fn(),
+            returnBook: jest.fn(),
           },
         },
       ],
@@ -45,16 +47,14 @@ describe('BooksController', () => {
         price: 10.99,
       };
       const file = { originalname: 'cover.jpg' } as Express.Multer.File;
-      const mockCoverUrl = 'https://s3.amazon.com/covers/cover.jpg';
 
-      booksService.createBook.mockResolvedValue(undefined); 
+      booksService.createBook.mockResolvedValue(undefined);
 
       const result = await booksController.createBook(createBookDto, file);
 
       expect(booksService.createBook).toHaveBeenCalledWith(createBookDto, file);
       expect(result).toEqual({ message: 'Book created successfully' });
     });
-
   });
 
   describe('updateBook', () => {
@@ -178,6 +178,56 @@ describe('BooksController', () => {
       const result = await booksController.getAllBooks();
 
       expect(result).toEqual({ error: 'Error fetching books' });
+    });
+  });
+
+  describe('borrowBook', () => {
+    it('should successfully borrow a book', async () => {
+      const bookId = 'book-id';
+      const userId = 'user-id';
+
+      booksService.borrowBook.mockResolvedValue(undefined);
+
+      const result = await booksController.borrowBook(bookId, userId);
+
+      expect(booksService.borrowBook).toHaveBeenCalledWith(bookId, userId);
+      expect(result).toEqual({ message: 'Book borrowed successfully' });
+    });
+
+    it('should throw an error if book cannot be borrowed', async () => {
+      const bookId = 'book-id';
+      const userId = 'user-id';
+
+      booksService.borrowBook.mockRejectedValue(new Error('Cannot borrow this book'));
+
+      const result = await booksController.borrowBook(bookId, userId);
+
+      expect(result).toEqual({ error: 'Cannot borrow this book' });
+    });
+  });
+
+  describe('returnBook', () => {
+    it('should successfully return a book', async () => {
+      const bookId = 'book-id';
+      const userId = 'user-id';
+
+      booksService.returnBook.mockResolvedValue(undefined);
+
+      const result = await booksController.returnBook(bookId, userId);
+
+      expect(booksService.returnBook).toHaveBeenCalledWith(bookId, userId);
+      expect(result).toEqual({ message: 'Book returned successfully' });
+    });
+
+    it('should throw an error if book cannot be returned', async () => {
+      const bookId = 'book-id';
+      const userId = 'user-id';
+
+      booksService.returnBook.mockRejectedValue(new Error('Cannot return this book'));
+
+      const result = await booksController.returnBook(bookId, userId);
+
+      expect(result).toEqual({ error: 'Cannot return this book' });
     });
   });
 });
