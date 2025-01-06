@@ -8,15 +8,19 @@ export class Book {
   cover: string;
   description: string;
   price: number;
-  borrowedBy?: BorrowInfo[];
+  borrowedBy?: Borrow[];
   createdAt: string;
   updatedAt: string;
 }
 
-export class BorrowInfo {
-  user_id: string;
-  borrow_date: string;
-  dueDate: string;
+export class Borrow {
+  borrow_id: string;
+  userId: string;
+  bookId: string;
+  borrowDate: string;
+  expectedReturnDate: string;
+  actualReturnDate?: string;
+  status: 'ACTIVE' | 'RETURNED' | 'OVERDUE';
 }
 
 export enum BookCategory {
