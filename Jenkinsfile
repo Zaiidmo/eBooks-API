@@ -58,10 +58,11 @@ pipeline {
                         sh """
                             ssh -o StrictHostKeyChecking=no ${DEPLOY_SERVER} "
                                 cd ${BOOKS_SERVICE_DIR} && \
-                                git pull origin master || git clone ${GIT_REPO} . && \
+                                git pull origin master  && \
                                 npm install && \
                                 npm run build && \
-                                pm2 restart eBooks-API || pm2 start npm --name 'eBooks-API' -- start
+                                pm2 delete all && \
+                                pm2 start dist/src/main.js --name eBooks-API
                             "
                         """
                     }
