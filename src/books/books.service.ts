@@ -189,6 +189,7 @@ export class BooksService {
       author: book.author,
       isbn: book.isbn,
       category: book.category,
+      borrowedBy: book.borrowedBy,
       quantity: book.quantity,
       cover: book.cover,
       description: book.description,
