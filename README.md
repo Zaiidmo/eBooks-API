@@ -1,98 +1,222 @@
-# Books Service API
+# 📚 Books Service API
 
-The **Books Service API** is a core component of the eBooks Application, designed to manage book-related operations for librarians and users. Built with **NestJS** and **DynamoDB**, this service provides efficient CRUD functionality, user interactions for borrowing and returning books, and insightful statistics. The service is integrated with **AWS API Gateway** to ensure seamless communication with other microservices in the eBooks ecosystem.
+The **Books Service API** is a core backend microservice within the **eBooks Application**, built with **NestJS** and deeply integrated into **AWS Cloud Infrastructure**.  
+It manages all book-related operations — from catalog management to user borrowing, returning, and analytics — while maintaining security, scalability, and seamless communication between microservices.
 
-## Features
-- **Librarian Operations**: Create, read, update, and delete books in the library catalog.
-- **User Interactions**: Borrow and return books, with validation of availability.
-- **Statistics**: Track and generate insights into book usage, borrowing trends, and availability.
-- **Microservice Communication**: Integration with AWS API Gateway to interact with other services in the eBooks Application.
-- **Scalable Storage**: Dynamically manage book data using DynamoDB and S3 (Foor books covers).
+---
 
-## Getting Started
+## 🚀 Overview
 
-### Prerequisites
-- Node.js (>=18.x)
-- NestJS CLI
-- AWS Account with DynamoDB and API Gateway access
+This service powers the **library and catalog domain** of the eBooks ecosystem.  
+Every request from users passes securely through the **AWS API Gateway**, which validates **Cognito-issued JWT tokens** before routing traffic to backend microservices such as **Books**, **Auth**, and others.
 
-### Installation
-1. Clone the repository:
-   ```bash
-   git clone git@github.com:Zaiidmo/eBooks-API.git
-   cd eBooks-API
-   ```
+This architecture ensures a fully managed, cloud-native, and secure workflow — combining serverless authentication, dynamic scaling, and real-time monitoring.
 
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
+---
 
-3. Configure environment variables:
-   ```bash
-   cp .env.example .env
-   ```
-   Update the .env file with proper variables
+## 🔐 Authentication Flow
 
-4. Run the service locally:
-   ```bash
-   npm run start:dev
-   ```
+All user requests are authenticated using **AWS Cognito** and validated through **API Gateway Authorizers** before reaching this service.
 
-### Testing
-Run the test suites using:
-```bash
-npm test
+```
+User → AWS Cognito (login/signup) → Token (JWT)
+     ↓
+AWS API Gateway (Authorizer + Routing)
+     ↓
+Books Service (NestJS + DynamoDB + S3)
 ```
 
-### Deployment
-1. Build the application:
-   ```bash
-   npm run build
-   ```
-2. Deploy to an EC2 instance. 
+> 🧭 The **Books Service API** itself doesn’t handle authentication logic. It trusts the identity verified by **Cognito** via **API Gateway**.
 
-### CI/CD Pipelines 
-1. Create and configure two EC2 instances, one for the `Jenkins Master` and another for the `Slave` 
-2. Check the JenkinsFile for better understanding the pipelines stages.
+---
 
-## API Endpoints
+## ✨ Core Features
 
-### Librarian Operations
-- `POST /books` – Add a new book to the catalog.
-- `PUT /books/:id` – Update book details.
-- `DELETE /books/:id` – Remove a book from the catalog.
-- `GET /books` – Fetch a list of all books.
-- `GET /books/:id` – Fetch details of a specific book.
+- **Librarian Operations**
 
-### User Operations
-- `GET /books` – Fetch a list of all books.
-- `GET /books/:id` – Fetch details of a specific book.
-- `POST /books/:id/borrow` – Borrow a book.
-- `POST /books/:id/return` – Return a book.
+  - Create, update, delete, and fetch books.
+  - Upload and manage book covers with **AWS S3**.
+  - Manage catalog data stored in **DynamoDB**.
+
+- **User Operations**
+
+  - Borrow and return books.
+  - Token validation and authorization through **API Gateway** and **Cognito**.
+
+- **Statistics & Insights**
+
+  - Generate data insights on book borrowing and user engagement.
+
+- **Scalability & Monitoring**
+
+  - Built for performance using **DynamoDB** and **CloudWatch** for observability.
+
+- **Microservice Architecture**
+  - Fully managed through **AWS API Gateway**, secured with **IAM roles**.
+
+---
+
+## 🧩 AWS Services Overview
+
+| AWS Service     | Purpose                                                                                    |
+| --------------- | ------------------------------------------------------------------------------------------ |
+| **Cognito**     | Handles authentication and user identity (JWT issuance).                                   |
+| **API Gateway** | Entry point for all client requests; validates Cognito tokens and routes to microservices. |
+| **DynamoDB**    | Stores all book and borrowing data with scalable performance.                              |
+| **S3**          | Stores and retrieves book cover images and media files.                                    |
+| **CloudWatch**  | Collects logs, tracks metrics, and monitors API performance.                               |
+| **CloudFront**  | Distributes static assets for frontend and improves latency.                               |
+| **IAM**         | Manages permissions between AWS services and microservices.                                |
+
+---
+
+## 🧠 Architecture Overview
+
+```
+src/
+├── app.module.ts              # Root module configuration
+├── books/                     # Books domain logic
+│   ├── dto/                   # DTOs for book operations
+│   ├── entities/              # Book schema definitions
+│   ├── books.controller.ts    # REST endpoints
+│   ├── books.service.ts       # Core business logic
+│   ├── books.repository.ts    # DynamoDB data layer
+│   └── books.module.ts        # Module setup
+├── config/
+│   ├── dynamodb.config.ts     # DynamoDB client setup
+│   ├── s3.config.ts           # S3 configuration
+├── services/
+│   ├── s3.service.ts          # File handling & uploads
+│   ├── app.controller.ts
+│   └── app.service.ts
+├── main.ts                    # Application entry point
+└── test/                      # Jest tests
+```
+
+---
+
+## ⚙️ Setup & Installation
+
+### Prerequisites
+
+- Node.js **v18+**
+- NestJS CLI (`npm i -g @nestjs/cli`)
+- AWS account with configured credentials
+- DynamoDB Table and S3 Bucket created
+
+### Installation
+
+```bash
+git clone https://github.com/Zaiidmo/eBooks-API.git
+cd eBooks-API
+npm install
+cp .env.example .env
+```
+
+### Configure environment variables:
+
+```bash
+cp .env.example .env
+```
+
+Update the newly created .env file with proper variables
+
+---
+
+## 🧪 Running & Testing
+
+### Development
+
+```bash
+npm run start:dev
+```
+
+### Production
+
+```bash
+npm run build
+npm run start:prod
+```
+
+### Testing
+
+```bash
+npm test
+npm run test:cov
+```
+
+---
+
+## 🔌 API Endpoints
+
+### Librarian Routes
+
+| Method | Endpoint     | Description         |
+| ------ | ------------ | ------------------- |
+| POST   | `/books`     | Add a new book      |
+| PUT    | `/books/:id` | Update book details |
+| DELETE | `/books/:id` | Delete a book       |
+| GET    | `/books`     | List all books      |
+| GET    | `/books/:id` | Get book details    |
+
+### User Routes
+
+| Method | Endpoint            | Description   |
+| ------ | ------------------- | ------------- |
+| POST   | `/books/:id/borrow` | Borrow a book |
+| POST   | `/books/:id/return` | Return a book |
 
 ### Statistics
-- `GET /books/statistics` – Get usage statistics and trends.
 
-## Technologies
-- **Front End**: ReactJs with Typescript
-- **Database**: AWS DynamoDB
-- **Back End**: NestJs
-- **API Management**: AWS API Gateway
+| Method | Endpoint            | Description            |
+| ------ | ------------------- | ---------------------- |
+| GET    | `/books/statistics` | Retrieve usage metrics |
 
-## CI/CD
-- **Containerization**: Docker 
-- **CI/CD Pipeline**: Jenkins
-- **Back End**: AWS EC2 
-- **Front End**: AWS S3 
+---
 
-## License
-This project is licensed under the [MIT License](LICENSE).
+## 🧱 CI/CD Pipeline (Jenkins)
 
-## Collaboration
-This project is part of the collaborative effort behind the eBooks Application. Contributions from the development team have ensured the integration and functionality of the Books Service API within the larger microservices ecosystem.
+**Stages:**
 
-For contributions or issues, please reach out via the repository or contact the project lead.
+1. **Build:** `npm ci && npm run build`
+2. **Test:** Executes automated test suite
+3. **Dockerize:** Builds and tags Docker image
+4. **Deploy:** Pushes to EC2 or ECR via Jenkins agents
+5. **Monitor:** Tracks metrics via AWS CloudWatch
 
-## Author Signature
-This project was implemented by [Zaiid Moumnii](https://www.vlpha.tech), focusing on building a scalable and efficient books management system within the eBooks Application. For further details or collaboration, feel free to connect.
+---
+
+## 🧰 Tech Stack
+
+| Layer          | Technology                       |
+| -------------- | -------------------------------- |
+| **Language**   | TypeScript                       |
+| **Framework**  | NestJS                           |
+| **Database**   | AWS DynamoDB                     |
+| **Storage**    | AWS S3                           |
+| **Auth Flow**  | Cognito + API Gateway Authorizer |
+| **Monitoring** | AWS CloudWatch                   |
+| **Delivery**   | AWS CloudFront                   |
+| **CI/CD**      | Jenkins + Docker + EC2           |
+
+---
+
+## 🌐 Related Repository
+
+The corresponding **Frontend Application** (handling Cognito authentication and user interaction) is available here:  
+👉 [eBooks Frontend](https://github.com/Zaiidmo/eBooks-UI)
+
+---
+
+## 🧑‍💻 Contributing
+
+Contributions are welcome!  
+To propose an improvement or fix, please open a pull request or issue.  
+📧 Contact: **vlphadev@gmail.com**
+
+---
+
+## 🪪 License
+
+Licensed under the **MIT License**.  
+© 2025 — Crafted by **TheVlpha**. You’ll know when you see it.
